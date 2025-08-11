@@ -19,7 +19,7 @@ on:
         default: ''
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: 'lts/*'
   DEPLOY_PATH: '/var/www/html'
   APP_NAME: 'frontend-app'
 
