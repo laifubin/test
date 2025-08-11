@@ -25,6 +25,7 @@ env:
 
 jobs:
     deploy:
+        if: github.event.inputs.rollback_version == ''
         runs-on: ubuntu-latest
 
         steps:
