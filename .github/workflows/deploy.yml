@@ -73,8 +73,9 @@ jobs:
                   script: |
                       # 创建备份
                       if [ -d "${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}/dist" ]; then
-                        cd ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}/dist
-                        tar -czf "${{ env.APP_NAME }}_${{ env.DEPLOY_VERSION }}.backup.tar.gz" ${{ env.DEPLOY_PATH }}
+                        cd ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}
+                        tar -czf "${{ env.APP_NAME }}_${{ env.DEPLOY_VERSION }}.backup.tar.gz" dist
+                        mv "${{ env.APP_NAME }}_${{ env.DEPLOY_VERSION }}.backup.tar.gz" ../
                       fi
 
                       # 部署新版本
@@ -100,7 +101,7 @@ jobs:
                       if [ -f "${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz" ]; then
                         rm -rf ${{ env.APP_NAME }}/dist
                         mkdir -p ${{ env.APP_NAME }}/dist
-                        tar -xzf "${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz" -C "${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}/dist" --strip-components 1
+                        tar -xzf "${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz" -C "${{ env.APP_NAME }}/dist" --strip-components 1
                         echo "回滚成功"
                       else
                         echo "回滚版本不存在"
