@@ -35,13 +35,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: 安装依赖
-        run: npm ci
+        run: pnpm ci
 
       - name: 构建应用
-        run: npm run build
+        run: pnpm run build
         
       - name: 生成部署包
         run: |
