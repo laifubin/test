@@ -79,8 +79,8 @@ jobs:
 
                       # 部署新版本
                       cd /tmp
-                      rm -rf ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}
-                      mkdir -p ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}
+                      rm -rf ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}/dist
+                      mkdir -p ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}/dist
                       tar -xzf dist.tar.gz -C ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }} --strip-components 1
                       rm dist.tar.gz
 
