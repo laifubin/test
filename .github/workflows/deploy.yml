@@ -1,0 +1,101 @@
+name: Frontend Deployment
+
+on:
+  # 自动触发部署
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'package.json'
+      - 'package-lock.json'
+  
+  # 手动触发部署
+  workflow_dispatch:
+    inputs:
+      rollback_version:
+        description: '回滚版本 (格式: YYYYMMDD_HHMMSS)'
+        required: false
+        default: ''
+
+env:
+  NODE_VERSION: '20'
+  DEPLOY_PATH: '/var/www/html'
+  APP_NAME: 'frontend-app'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 构建应用
+        run: npm run build
+        
+      - name: 生成部署包
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          echo "DEPLOY_VERSION=$TIMESTAMP" >> $GITHUB_ENV
+          tar -czf dist.tar.gz dist/
+
+      - name: 部署到服务器
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "dist.tar.gz"
+          target: "/tmp"
+
+      - name: 执行部署
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            # 创建备份
+            if [ -d "${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}" ]; then
+              cd ${{ env.DEPLOY_PATH }}
+              tar -czf "${{ env.APP_NAME }}_${{ env.DEPLOY_VERSION }}.backup.tar.gz" ${{ env.APP_NAME }}
+            fi
+            
+            # 部署新版本
+            cd /tmp
+            rm -rf ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}
+            mkdir -p ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}
+            tar -xzf dist.tar.gz -C ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }} --strip-components 1
+            rm dist.tar.gz
+
+  rollback:
+    if: github.event.inputs.rollback_version != ''
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 执行回滚
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ${{ env.DEPLOY_PATH }}
+            if [ -f "${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz" ]; then
+              rm -rf ${{ env.APP_NAME }}
+              tar -xzf "${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz"
+              echo "回滚成功"
+            else
+              echo "回滚版本不存在"
+              exit 1
+            fi
