@@ -31,6 +31,11 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      - name: 安装 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: lts/*
+          
       - name: 设置 Node.js
         uses: actions/setup-node@v4
         with:
