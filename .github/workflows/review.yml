@@ -53,6 +53,7 @@ jobs:
                   chmod +x .github/generate-config.sh
                   .github/validate.sh
               env:
+                  INPUT_PR_NUMBER: ${{ github.event.inputs.pr_number }}
                   # GitHub Actions 内置环境变量
                   GITHUB_REPOSITORY: ${{ github.repository }}
                   GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}

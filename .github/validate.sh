@@ -111,9 +111,8 @@ if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
   # 从事件文件中获取PR编号
   PR_NUMBER=$(jq -r '.pull_request.number' "$GITHUB_EVENT_PATH")
 else
-  echo "输入的PR编号: ${ inputs.pr_number }"
   # 从输入参数获取PR编号
-  PR_NUMBER=${ inputs.pr_number }
+  PR_NUMBER=$INPUT_PR_NUMBER
 fi
 
 if [ -z "$PR_NUMBER" ]; then
