@@ -33,7 +33,6 @@ jobs:
               with:
                   node-version: lts/*
                   cache: pnpm
-                  cache-dependency-path: package-lock.yaml
 
             - name: Cache pnpm packages
               uses: actions/cache@v4
