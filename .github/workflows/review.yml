@@ -39,7 +39,11 @@ jobs:
               with:
                   path: |
                       ~/.pnpm-cache
-                  key: ${{ runner.os }}-pnpm-${{ hashFiles('**/package-lock.yaml') }}
+                      ~/.local/share/pnpm/store
+                      node_modules
+                  key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                    ${{ runner.os }}-pnpm-
 
             - name: Setup and validate
               id: setup
