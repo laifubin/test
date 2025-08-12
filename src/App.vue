@@ -1,4 +1,15 @@
-<script setup></script>
+<script setup>
+// test ai code review
+var arr = []
+;[1, 2, 3, 4, 5].map(x => {
+  if (x % 2 === 0) {
+    arr.push(x)
+  } 
+})
+var sum = arr.reduce((accumulator, currentValue) => accumulator + currentValue, 0)
+
+console.log('test:', sum)
+</script>
 
 <template>
   <h1 style="color: rebeccapurple;">You did it!</h1>

@@ -75,6 +75,7 @@ review:
   ignorePaths:
     - 'node_modules/'
     - 'dist/'
+    - .github/
 EOF
 
 # 验证配置文件是否生成成功
