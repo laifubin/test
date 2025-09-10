@@ -20,10 +20,6 @@ on:
             target_branch:
               description: '目标分支 (main/master)'
               required: false
-              type: choice
-              options:
-                - main
-                - master
               default: ''
 
 env:
