@@ -3,7 +3,7 @@ name: Frontend Deployment
 on:
     # 自动触发部署
     push:
-        branches: [main, master]
+        branches: ['test']
         paths:
             - 'src/**'
             - 'public/**'
@@ -19,12 +19,12 @@ on:
                 default: ''
             target_branch:
               description: '目标分支 (main/master)'
-              required: true
+              required: false
               type: choice
               options:
                 - main
                 - master
-              default: 'main'
+              default: 'master'
 
 env:
     NODE_VERSION: 'lts/*'
