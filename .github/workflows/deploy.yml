@@ -14,9 +14,17 @@ on:
     workflow_dispatch:
         inputs:
             rollback_version:
-                description: '回滚版本 (格式: YYYYMMDD_HHMMSS)'
+                description: '回滚版本 (commit id)'
                 required: false
                 default: ''
+            target_branch:
+              description: '目标分支 (main/master)'
+              required: true
+              type: choice
+              options:
+                - main
+                - master
+              default: 'main'
 
 env:
     NODE_VERSION: 'lts/*'
@@ -25,12 +33,18 @@ env:
 
 jobs:
     deploy:
-        if: github.event.inputs.rollback_version == ''
+        if: (github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch == 'main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target_branch == 'master') || (github.event_name == 'push' && github.ref == 'refs/heads/test')
+    
         runs-on: ubuntu-latest
 
         steps:
             - name: 检出代码
               uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # 获取所有提交历史，用于获取完整的 commit id
+                   # 根据触发方式选择分支
+                  ref: ${{ github.event_name == 'push' && 'test' || github.event.inputs.target_branch }}
+
 
             - name: 安装 pnpm
               uses: pnpm/action-setup@v4
@@ -52,8 +66,9 @@ jobs:
 
             - name: 生成部署包
               run: |
-                  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-                  echo "DEPLOY_VERSION=$TIMESTAMP" >> $GITHUB_ENV
+                  # 使用 commit id 作为部署版本
+                  COMMIT_ID=$(git rev-parse --short HEAD)
+                  echo "DEPLOY_VERSION=$COMMIT_ID" >> $GITHUB_ENV
                   tar -czf dist.tar.gz dist/
 
             - name: 部署到服务器
@@ -105,6 +120,8 @@ jobs:
                         tar -xzf "${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz" -C "${{ env.APP_NAME }}/dist" --strip-components 1
                         echo "回滚成功"
                       else
-                        echo "回滚版本不存在"
+                        echo "回滚版本不存在: ${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz"
+                        echo "可用备份文件:"
+                        ls -la | grep "\.backup\.tar\.gz" || echo "无备份文件"
                         exit 1
                       fi
