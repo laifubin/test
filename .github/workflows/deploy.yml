@@ -24,7 +24,7 @@ on:
               options:
                 - main
                 - master
-              default: 'master'
+              default: ''
 
 env:
     NODE_VERSION: 'lts/*'
