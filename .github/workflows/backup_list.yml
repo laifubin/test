@@ -1,0 +1,70 @@
+name: Backup List
+
+on:
+  workflow_dispatch:
+    # 手动触发 - 列出服务器备份文件
+
+
+env:
+  DEPLOY_PATH: '/var/www/html'
+  APP_NAME: 'frontend-app'
+
+jobs:
+  list-backups:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 列出备份文件
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            echo "=== 可用备份文件列表 ==="
+            echo "备份路径: ${{ env.DEPLOY_PATH }}"
+            echo "应用名称: ${{ env.APP_NAME }}"
+            echo ""
+            
+            cd ${{ env.DEPLOY_PATH }}
+            
+            # 检查备份文件是否存在
+            if ls ${{ env.APP_NAME }}_*.backup.tar.gz 1> /dev/null 2>&1; then
+              echo "📦 备份文件列表（按时间排序）:"
+              echo "=========================================="
+              
+              # 列出详细信息并排序
+              ls -la ${{ env.APP_NAME }}_*.backup.tar.gz | sort -k 6,7 -k 8
+              
+              echo ""
+              echo "📊 备份文件统计:"
+              echo "=========================================="
+              echo "总备份数量: $(ls ${{ env.APP_NAME }}_*.backup.tar.gz | wc -l)"
+              echo "最早备份: $(ls -t ${{ env.APP_NAME }}_*.backup.tar.gz | tail -1)"
+              echo "最新备份: $(ls -t ${{ env.APP_NAME }}_*.backup.tar.gz | head -1)"
+              
+              echo ""
+              echo "💾 磁盘使用情况:"
+              echo "=========================================="
+              du -sh ${{ env.APP_NAME }}_*.backup.tar.gz | sort -hr
+              echo "总大小: $(du -ch ${{ env.APP_NAME }}_*.backup.tar.gz | grep total)"
+              
+            else
+              echo "❌ 没有找到备份文件"
+              echo "备份文件格式: ${{ env.APP_NAME }}_YYYYMMDD_HHMMSS_COMMIT.backup.tar.gz"
+            fi
+            
+            echo ""
+            echo "📝 使用说明:"
+            echo "=========================================="
+            echo "手动回滚命令:"
+            echo "tar -xzf ${{ env.APP_NAME }}_20250101_120000_abc1234.backup.tar.gz -C ${{ env.APP_NAME }}/dist --strip-components 1"
+            echo ""
+            echo "删除旧备份命令:"
+            echo "find . -name \"${{ env.APP_NAME }}_*.backup.tar.gz\" -mtime +7 -delete"
+
+      - name: 生成备份报告
+        if: always()
+        run: |
+          echo "备份列表查询完成"
+          echo "查看上方 SSH 输出获取详细信息"
