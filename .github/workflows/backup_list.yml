@@ -1,4 +1,4 @@
-name: Backup List
+name: Backups Review
 
 on:
     workflow_dispatch:
@@ -9,7 +9,7 @@ env:
     APP_NAME: 'frontend-app'
 
 jobs:
-    list-backups:
+    backups_review:
         runs-on: ubuntu-latest
 
         steps:

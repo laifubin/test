@@ -1,4 +1,4 @@
-name: Frontend Deployment
+name: Deployment
 
 on:
     # 自动触发部署
@@ -13,14 +13,10 @@ on:
     # 手动触发部署
     workflow_dispatch:
         inputs:
-            rollback_version:
-                description: '回滚版本 (时间+简短 commit id)'
-                required: false
-                default: ''
             target_branch:
                 description: '目标分支 (main/master)'
                 required: false
-                default: ''
+                default: 'master'
 
 env:
     NODE_VERSION: 'lts/*'
@@ -88,6 +84,7 @@ jobs:
                         cd ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}
                         tar -czf "${{ env.APP_NAME }}_${{ env.DEPLOY_VERSION }}.backup.tar.gz" dist
                         mv "${{ env.APP_NAME }}_${{ env.DEPLOY_VERSION }}.backup.tar.gz" ../
+                        echo "备份创建成功: ${{ env.APP_NAME }}_${{ env.DEPLOY_VERSION }}.backup.tar.gz"
                       fi
 
                       # 清理超过7天的备份文件
@@ -103,28 +100,6 @@ jobs:
                       mkdir -p ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}/dist
                       tar -xzf dist.tar.gz -C ${{ env.DEPLOY_PATH }}/${{ env.APP_NAME }}/dist --strip-components 1
                       rm dist.tar.gz
+                      echo "部署成功: 版本 ${{ env.DEPLOY_VERSION }}"
 
-    rollback:
-        if: github.event.inputs.rollback_version != ''
-        runs-on: ubuntu-latest
-
-        steps:
-            - name: 执行回滚
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                  host: ${{ secrets.SERVER_HOST }}
-                  username: ${{ secrets.SERVER_USERNAME }}
-                  key: ${{ secrets.SERVER_SSH_KEY }}
-                  script: |
-                      cd ${{ env.DEPLOY_PATH }}
-                      if [ -f "${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz" ]; then
-                        rm -rf ${{ env.APP_NAME }}/dist
-                        mkdir -p ${{ env.APP_NAME }}/dist
-                        tar -xzf "${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz" -C "${{ env.APP_NAME }}/dist" --strip-components 1
-                        echo "回滚成功"
-                      else
-                        echo "回滚版本不存在: ${{ env.APP_NAME }}_${{ github.event.inputs.rollback_version }}.backup.tar.gz"
-                        echo "可用备份文件:"
-                        ls -lat | grep "\.backup\.tar\.gz" | sort || echo "无备份文件"
-                        exit 1
-                      fi
+  
